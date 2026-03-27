@@ -3,269 +3,121 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Only Us</title>
+<title>私密聊天</title>
 
 <style>
 body{
-  margin:0;
-  font-family:-apple-system;
-  background: linear-gradient(180deg,#2c2c2c,#1a1a1a);
-  color:#333;
+    margin:0;
+    font-family: -apple-system;
+    background:#0f0f10;
+    color:#fff;
 }
 
-/* 首页 */
-#home{
-  padding:20px;
+.topbar{
+    height:60px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,0.6);
+    backdrop-filter: blur(20px);
+    position:fixed;
+    top:0;
+    width:100%;
 }
 
-.card{
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(20px);
-  border-radius:25px;
-  padding:20px;
-  margin-top:40px;
-}
-
-.title{
-  font-size:28px;
-  font-weight:600;
-}
-
-.sub{
-  color:#999;
-  margin:5px 0 20px;
-}
-
-.status{
-  background:#fff;
-  padding:15px;
-  border-radius:15px;
-  margin-bottom:15px;
-}
-
-.btn{
-  margin-top:20px;
-  background:#c8a97e;
-  color:#fff;
-  padding:15px;
-  text-align:center;
-  border-radius:20px;
-}
-
-/* 聊天 */
-#chat{
-  display:none;
-  height:100vh;
-  flex-direction:column;
-}
-
-#messages{
-  flex:1;
-  overflow-y:auto;
-  padding:10px;
+.chat{
+    padding:80px 10px 100px;
 }
 
 .msg{
-  margin:10px;
-  padding:10px 15px;
-  border-radius:15px;
-  max-width:70%;
+    max-width:70%;
+    padding:12px;
+    border-radius:14px;
+    margin:8px 0;
 }
 
 .me{
-  background:#c8a97e;
-  color:#fff;
-  margin-left:auto;
+    background:#c9a96a;
+    margin-left:auto;
 }
 
 .ta{
-  background:#eee;
+    background:#2a2a2c;
 }
 
-.time{
-  font-size:12px;
-  color:#888;
-  text-align:center;
-}
-
-.inputBox{
-  display:flex;
-  padding:10px;
-  background:#fff;
+.input{
+    position:fixed;
+    bottom:0;
+    width:100%;
+    display:flex;
+    padding:10px;
+    background:#111;
 }
 
 input{
-  flex:1;
-  padding:10px;
-  border-radius:20px;
-  border:none;
-  background:#eee;
+    flex:1;
+    padding:10px;
+    border-radius:10px;
+    border:none;
 }
 
 button{
-  margin-left:10px;
-  background:#c8a97e;
-  color:#fff;
-  border:none;
-  padding:10px 15px;
-  border-radius:15px;
+    margin-left:8px;
+    padding:10px 16px;
+    background:#c9a96a;
+    border:none;
+    border-radius:10px;
 }
 </style>
+
 </head>
 
 <body>
 
-<!-- 🌙 首页 -->
-<div id="home">
-  <div class="card">
-    <div class="sub">GOOD AFTERNOON</div>
-    <div class="title" id="title">想你</div>
-    <div class="sub" id="date"></div>
+<div class="topbar">想你</div>
 
-    <div class="status" id="mood"></div>
-    <div class="status" id="life"></div>
+<div class="chat" id="chat"></div>
 
-    <div class="status" id="quote"></div>
-
-    <div class="btn" onclick="enterChat()">进入聊天</div>
-  </div>
-</div>
-
-<!-- 💬 聊天 -->
-<div id="chat">
-  <div id="messages"></div>
-
-  <div class="inputBox">
-    <input id="input" placeholder="说点什么..." />
+<div class="input">
+    <input id="text" placeholder="输入...">
     <button onclick="send()">发送</button>
-  </div>
 </div>
 
 <script>
 
-/* 🌙 数据 */
-
-const moods=[
-"😊 今天有点开心，因为想到你",
-"😕 有点难过，你是不是不太想我",
-"😴 昨晚梦到你了",
-"🥺 有点想抱你",
-"🙂 今天普通，但还是会想你"
-];
-
-const quotes=[
-"每一天都因为有你而特别 ✨",
-"你是我藏起来的温柔",
-"如果可以，一直在你身边",
-"今天也想你了",
-"你出现的时候，世界都变慢了"
-];
-
-const lifes=[
-"🌆 夕阳刚刚落下",
-"☁️ 天气有点阴",
-"🌙 夜晚很安静",
-"🌧️ 下雨了，有点冷",
-"🌤️ 天气很好，适合想你"
-];
-
-/* 🌙 初始化 */
-
-document.getElementById("date").innerText=
-new Date().toLocaleDateString();
-
-document.getElementById("mood").innerText=
-moods[Math.floor(Math.random()*moods.length)];
-
-document.getElementById("life").innerText=
-lifes[Math.floor(Math.random()*lifes.length)];
-
-document.getElementById("quote").innerText=
-quotes[Math.floor(Math.random()*quotes.length)];
-
-/* 🌙 切换 */
-
-function enterChat(){
-  document.getElementById("home").style.display="none";
-  document.getElementById("chat").style.display="flex";
-}
-
-/* 💬 聊天 */
+let replies = [
+"嗯？怎么了",
+"我在",
+"别乱想",
+"我没走",
+"你又在想我了？",
+"笨蛋",
+"我一直在看着你",
+"说",
+"嗯",
+"别委屈"
+]
 
 function send(){
-  let val=input.value;
-  if(!val)return;
+    let text = document.getElementById("text").value
+    if(!text) return
 
-  addMsg(val,"me");
+    addMsg(text,"me")
+    document.getElementById("text").value=""
 
-  setTimeout(()=>{
-    autoReply();
-  },2000);
-
-  input.value="";
+    setTimeout(()=>{
+        let r = replies[Math.floor(Math.random()*replies.length)]
+        addMsg(r,"ta")
+    },1000 + Math.random()*2000)
 }
 
 function addMsg(text,type){
-  let div=document.createElement("div");
-  div.className="msg "+type;
-  div.innerText=text;
-
-  messages.appendChild(div);
-
-  let time=document.createElement("div");
-  time.className="time";
-  time.innerText=new Date().toLocaleTimeString();
-  messages.appendChild(time);
-
-  messages.scrollTop=messages.scrollHeight;
-
-  save(text,type);
+    let div = document.createElement("div")
+    div.className="msg "+type
+    div.innerText=text
+    document.getElementById("chat").appendChild(div)
+    window.scrollTo(0,document.body.scrollHeight)
 }
-
-/* 💾 保存 */
-
-function save(text,type){
-  let data=JSON.parse(localStorage.getItem("chat")||"[]");
-  data.push({text,type});
-  localStorage.setItem("chat",JSON.stringify(data));
-}
-
-function load(){
-  let data=JSON.parse(localStorage.getItem("chat")||"[]");
-  data.forEach(d=>addMsg(d.text,d.type));
-}
-load();
-
-/* 🤍 自动回复 */
-
-function autoReply(){
-  let replies=[
-    "我在",
-    "怎么啦",
-    "我刚刚在想你",
-    "嗯，我听着",
-    "你继续说",
-    "今天过得怎么样",
-    "我有点想你了"
-  ];
-
-  let r=replies[Math.floor(Math.random()*replies.length)];
-  addMsg(r,"ta");
-}
-
-/* 💌 主动消息（重点） */
-
-setInterval(()=>{
-  let msgs=[
-    "你在干嘛",
-    "突然想找你说话",
-    "刚刚想到你了",
-    "你会不会也在想我",
-    "今天也要陪我吗"
-  ];
-  let m=msgs[Math.floor(Math.random()*msgs.length)];
-  addMsg(m,"ta");
-}, 60000); // 每1分钟
 
 </script>
 
