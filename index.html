@@ -3,121 +3,277 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>私密聊天</title>
+<title>Only Us</title>
 
 <style>
 body{
-    margin:0;
-    font-family: -apple-system;
-    background:#0f0f10;
-    color:#fff;
+  margin:0;
+  font-family:-apple-system;
+  background:#0f0f10;
+  color:#fff;
 }
 
-.topbar{
-    height:60px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:rgba(0,0,0,0.6);
-    backdrop-filter: blur(20px);
-    position:fixed;
-    top:0;
-    width:100%;
+/* 顶部栏 */
+.top{
+  position:fixed;
+  top:0;
+  width:100%;
+  height:60px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 15px;
+  background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(20px);
 }
+
+.avatar{
+  width:35px;
+  height:35px;
+  border-radius:50%;
+  background:#ccc;
+}
+
+.name{font-weight:600}
 
 .chat{
-    padding:80px 10px 100px;
+  padding:80px 10px 100px;
+  overflow:auto;
 }
 
+/* 气泡 */
 .msg{
-    max-width:70%;
-    padding:12px;
-    border-radius:14px;
-    margin:8px 0;
+  max-width:70%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:12px;
 }
 
-.me{
-    background:#c9a96a;
-    margin-left:auto;
+.me{background:#c9a96a;margin-left:auto;}
+.ta{background:#2a2a2c;}
+
+.time{
+  font-size:10px;
+  opacity:.5;
 }
 
-.ta{
-    background:#2a2a2c;
-}
-
+/* 输入 */
 .input{
-    position:fixed;
-    bottom:0;
-    width:100%;
-    display:flex;
-    padding:10px;
-    background:#111;
+  position:fixed;
+  bottom:0;
+  width:100%;
+  display:flex;
+  padding:10px;
+  background:#111;
 }
 
 input{
-    flex:1;
-    padding:10px;
-    border-radius:10px;
-    border:none;
+  flex:1;
+  padding:10px;
+  border-radius:20px;
+  border:none;
 }
 
 button{
-    margin-left:8px;
-    padding:10px 16px;
-    background:#c9a96a;
-    border:none;
-    border-radius:10px;
+  margin-left:5px;
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  background:#c9a96a;
+}
+
+/* 面板 */
+.panel{
+  position:fixed;
+  right:-100%;
+  top:0;
+  width:80%;
+  height:100%;
+  background:#111;
+  transition:.3s;
+  padding:20px;
+  overflow:auto;
+}
+
+.panel.show{right:0;}
+
+.card{
+  background:#1f1f1f;
+  padding:10px;
+  margin:5px 0;
+  border-radius:10px;
 }
 </style>
-
 </head>
 
 <body>
 
-<div class="topbar">想你</div>
+<!-- 顶部 -->
+<div class="top">
+  <div style="display:flex;align-items:center;">
+    <div class="avatar"></div>
+    <div class="name">他</div>
+  </div>
+  <div onclick="togglePanel()">⚙️</div>
+</div>
 
+<!-- 聊天 -->
 <div class="chat" id="chat"></div>
 
+<!-- 输入 -->
 <div class="input">
-    <input id="text" placeholder="输入...">
-    <button onclick="send()">发送</button>
+  <input id="text">
+  <button onclick="send()">发送</button>
+</div>
+
+<!-- 面板 -->
+<div class="panel" id="panel">
+
+<h3>🎴 字卡库</h3>
+<div id="cardList"></div>
+<button onclick="addCard()">添加</button>
+
+<hr>
+
+<h3>🎨 外观</h3>
+<button onclick="setBg()">换背景</button>
+
 </div>
 
 <script>
 
-let replies = [
-"嗯？怎么了",
+/* 数据 */
+let cards = JSON.parse(localStorage.getItem("cards")||`[
 "我在",
 "别乱想",
-"我没走",
-"你又在想我了？",
-"笨蛋",
-"我一直在看着你",
-"说",
 "嗯",
-"别委屈"
-]
+"你又在想我",
+"我没走"
+]`);
 
+let chatData = JSON.parse(localStorage.getItem("chat")||"[]");
+
+/* 工具 */
+function save(){
+  localStorage.setItem("cards",JSON.stringify(cards));
+  localStorage.setItem("chat",JSON.stringify(chatData));
+}
+
+function time(){
+  return new Date().toLocaleTimeString();
+}
+
+/* 渲染 */
+function render(){
+  chat.innerHTML="";
+  chatData.forEach(m=>{
+    let d=document.createElement("div");
+    d.className="msg "+m.type;
+    d.innerHTML=m.text+"<div class='time'>"+m.time+"</div>";
+    chat.appendChild(d);
+  });
+}
+
+function renderCards(){
+  cardList.innerHTML="";
+  cards.forEach((c,i)=>{
+    let d=document.createElement("div");
+    d.className="card";
+    d.innerHTML=`${c} <button onclick="delCard(${i})">删</button>`;
+    cardList.appendChild(d);
+  });
+}
+
+/* 聊天 */
 function send(){
-    let text = document.getElementById("text").value
-    if(!text) return
+  let v=text.value;
+  if(!v)return;
 
-    addMsg(text,"me")
-    document.getElementById("text").value=""
+  addMsg(v,"me");
+  text.value="";
 
-    setTimeout(()=>{
-        let r = replies[Math.floor(Math.random()*replies.length)]
-        addMsg(r,"ta")
-    },1000 + Math.random()*2000)
+  autoReply();
 }
 
-function addMsg(text,type){
-    let div = document.createElement("div")
-    div.className="msg "+type
-    div.innerText=text
-    document.getElementById("chat").appendChild(div)
-    window.scrollTo(0,document.body.scrollHeight)
+function addMsg(t,type){
+  chatData.push({text:t,type,time:time()});
+  save();
+  render();
 }
+
+/* 回复 */
+function autoReply(){
+
+  if(Math.random()<0.2)return; // 偶尔不回
+
+  showTyping();
+
+  setTimeout(()=>{
+    hideTyping();
+
+    let r=cards[Math.floor(Math.random()*cards.length)];
+    addMsg(r,"ta");
+
+  },1500+Math.random()*2000);
+}
+
+/* 输入中 */
+function showTyping(){
+  let d=document.createElement("div");
+  d.id="typing";
+  d.className="msg ta";
+  d.innerText="正在输入...";
+  chat.appendChild(d);
+}
+
+function hideTyping(){
+  let t=document.getElementById("typing");
+  if(t)t.remove();
+}
+
+/* 主动消息 */
+setInterval(()=>{
+  if(Math.random()<0.3){
+    let r=cards[Math.floor(Math.random()*cards.length)];
+    addMsg(r,"ta");
+  }
+},20000);
+
+/* 字卡 */
+function addCard(){
+  let t=prompt("写一句");
+  if(!t)return;
+  cards.push(t);
+  save();
+  renderCards();
+}
+
+function delCard(i){
+  cards.splice(i,1);
+  save();
+  renderCards();
+}
+
+/* 外观 */
+function setBg(){
+  let url=prompt("输入图片链接");
+  if(url){
+    document.body.style.background=`url(${url}) center/cover`;
+    localStorage.setItem("bg",url);
+  }
+}
+
+/* 面板 */
+function togglePanel(){
+  panel.classList.toggle("show");
+}
+
+/* 初始化 */
+let bg=localStorage.getItem("bg");
+if(bg) document.body.style.background=`url(${bg}) center/cover`;
+
+render();
+renderCards();
 
 </script>
 
