@@ -3,53 +3,119 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chat</title>
+<title>聊天页面</title>
+
 <style>
-body{margin:0;font-family:sans-serif;background:#111;color:#fff}
-.chat{height:90vh;overflow:auto;padding:10px}
-.msg{margin:5px 0;padding:10px;border-radius:10px;max-width:70%}
-.user{background:#2563eb;margin-left:auto}
-.bot{background:#333}
-.input{position:fixed;bottom:0;width:100%;display:flex}
-input{flex:1;padding:10px;border:none}
-button{padding:10px;background:#2563eb;color:#fff;border:none}
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont;
+    background: #f5f5f5;
+}
+
+.header {
+    background: #ffffff;
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+}
+
+.chat {
+    padding: 15px;
+}
+
+.msg {
+    display: flex;
+    margin-bottom: 15px;
+}
+
+.left {
+    justify-content: flex-start;
+}
+
+.right {
+    justify-content: flex-end;
+}
+
+.bubble {
+    max-width: 60%;
+    padding: 10px 14px;
+    border-radius: 15px;
+    font-size: 14px;
+}
+
+.left .bubble {
+    background: #ffffff;
+}
+
+.right .bubble {
+    background: #caa47b;
+    color: white;
+}
+
+.input-area {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: #fff;
+    padding: 10px;
+    display: flex;
+    border-top: 1px solid #ddd;
+}
+
+input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+}
+
+button {
+    margin-left: 10px;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 20px;
+    background: #caa47b;
+    color: white;
+}
 </style>
 </head>
+
 <body>
 
-<div class="chat" id="chat"></div>
+<div class="header">梦角</div>
 
-<div class="input">
-<input id="text" placeholder="输入...">
-<button onclick="send()">发送</button>
+<div class="chat" id="chat">
+    <div class="msg left">
+        <div class="bubble">你可以爱我吗</div>
+    </div>
+
+    <div class="msg right">
+        <div class="bubble">我知道了</div>
+    </div>
+</div>
+
+<div class="input-area">
+    <input id="text" placeholder="输入...">
+    <button onclick="send()">发送</button>
 </div>
 
 <script>
-const chat=document.getElementById("chat");
-const input=document.getElementById("text");
-const replies=["你好","加油","慢慢来","你可以的","别焦虑"];
+function send() {
+    const text = document.getElementById("text").value;
+    if (!text) return;
 
-function add(text,type){
-const d=document.createElement("div");
-d.className="msg "+type;
-d.innerText=text;
-chat.appendChild(d);
-chat.scrollTop=chat.scrollHeight;
+    const chat = document.getElementById("chat");
+
+    const msg = document.createElement("div");
+    msg.className = "msg right";
+
+    msg.innerHTML = `<div class="bubble">${text}</div>`;
+    chat.appendChild(msg);
+
+    document.getElementById("text").value = "";
+    chat.scrollTop = chat.scrollHeight;
 }
-
-function send(){
-const t=input.value.trim();
-if(!t)return;
-add(t,"user");
-input.value="";
-setTimeout(()=>{
-add(replies[Math.floor(Math.random()*replies.length)],"bot");
-},500);
-}
-
-input.addEventListener("keydown",e=>{
-if(e.key==="Enter")send();
-});
 </script>
 
 </body>
