@@ -3,119 +3,225 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>聊天页面</title>
 
 <style>
+:root {
+  --main-color:#ff8fa3;
+  --bg-color:#f5f5f5;
+}
+
 body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont;
-    background: #f5f5f5;
+  margin:0;
+  font-family:-apple-system;
+  background:var(--bg-color);
+  background-size:cover;
 }
 
 .header {
-    background: #ffffff;
-    padding: 15px;
-    text-align: center;
-    font-weight: bold;
-    border-bottom: 1px solid #ddd;
+  display:flex;
+  align-items:center;
+  padding:10px;
+  background:#fff;
 }
 
-.chat {
-    padding: 15px;
+.avatar {
+  width:35px;
+  height:35px;
+  border-radius:50%;
+  margin-right:8px;
+  position:relative;
 }
+
+.badge {
+  position:absolute;
+  top:0;
+  right:0;
+  width:10px;
+  height:10px;
+  background:red;
+  border-radius:50%;
+}
+
+.chat {height:65vh;overflow:auto;padding:10px;}
 
 .msg {
-    display: flex;
-    margin-bottom: 15px;
-}
-
-.left {
-    justify-content: flex-start;
-}
-
-.right {
-    justify-content: flex-end;
+  display:flex;
+  margin:8px 0;
 }
 
 .bubble {
-    max-width: 60%;
-    padding: 10px 14px;
-    border-radius: 15px;
-    font-size: 14px;
+  padding:10px;
+  border-radius:12px;
+  max-width:60%;
 }
 
-.left .bubble {
-    background: #ffffff;
+.user .bubble {
+  background:var(--main-color);
+  color:#fff;
+  margin-left:auto;
 }
 
-.right .bubble {
-    background: #caa47b;
-    color: white;
+.bot .bubble {
+  background:#fff;
 }
 
-.input-area {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    background: #fff;
-    padding: 10px;
-    display: flex;
-    border-top: 1px solid #ddd;
+.time {
+  font-size:10px;
+  opacity:0.6;
 }
 
-input {
-    flex: 1;
-    padding: 10px;
-    border-radius: 20px;
-    border: 1px solid #ccc;
+.input {
+  position:fixed;
+  bottom:0;
+  width:100%;
+  display:flex;
+  background:#fff;
 }
 
-button {
-    margin-left: 10px;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 20px;
-    background: #caa47b;
-    color: white;
+input {flex:1;padding:10px;border:none;}
+button {padding:10px;border:none;background:var(--main-color);color:#fff;}
+
+.roles {
+  display:flex;
+  overflow-x:auto;
+  background:#fff;
+  padding:5px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">梦角</div>
-
-<div class="chat" id="chat">
-    <div class="msg left">
-        <div class="bubble">你可以爱我吗</div>
-    </div>
-
-    <div class="msg right">
-        <div class="bubble">我知道了</div>
-    </div>
+<div class="header">
+  <div class="roles" id="roles"></div>
+  <button onclick="addRole()">+</button>
 </div>
 
-<div class="input-area">
-    <input id="text" placeholder="输入...">
-    <button onclick="send()">发送</button>
+<div class="chat" id="chat"></div>
+
+<div class="input">
+  <input id="text">
+  <button onclick="send()">发送</button>
 </div>
 
 <script>
-function send() {
-    const text = document.getElementById("text").value;
-    if (!text) return;
+let roles = JSON.parse(localStorage.getItem("roles2")||"{}");
+let current=null;
 
-    const chat = document.getElementById("chat");
-
-    const msg = document.createElement("div");
-    msg.className = "msg right";
-
-    msg.innerHTML = `<div class="bubble">${text}</div>`;
-    chat.appendChild(msg);
-
-    document.getElementById("text").value = "";
-    chat.scrollTop = chat.scrollHeight;
+if(Object.keys(roles).length===0){
+  roles["TA"]={
+    avatar:"https://i.imgur.com/8Km9tLL.png",
+    cards:["想你","在干嘛","抱抱你"],
+    chat:[],
+    unread:0
+  };
 }
+
+function save(){
+  localStorage.setItem("roles2",JSON.stringify(roles));
+}
+
+function renderRoles(){
+  rolesDiv.innerHTML="";
+  for(let name in roles){
+    let r=roles[name];
+    let d=document.createElement("div");
+    d.innerHTML=`
+      <img src="${r.avatar}" class="avatar" onclick="switchRole('${name}')">
+      ${r.unread>0?'<div class="badge"></div>':''}
+    `;
+    rolesDiv.appendChild(d);
+  }
+}
+
+function switchRole(name){
+  current=name;
+  roles[name].unread=0;
+  renderChat();
+  renderRoles();
+}
+
+function renderChat(){
+  chat.innerHTML="";
+  roles[current].chat.forEach(m=>{
+    let div=document.createElement("div");
+    div.className="msg "+m.type;
+    div.innerHTML=`
+      ${m.type=="bot"?'<img src="'+roles[current].avatar+'" class="avatar">':""}
+      <div class="bubble">${m.text}<div class="time">${m.time}</div></div>
+    `;
+    chat.appendChild(div);
+  });
+}
+
+function time(){
+  let d=new Date();
+  return d.getHours()+":"+d.getMinutes();
+}
+
+function addMsg(text,type,role=current){
+  roles[role].chat.push({text,type,time:time()});
+
+  if(role!==current){
+    roles[role].unread++;
+  }
+
+  save();
+  renderChat();
+  renderRoles();
+}
+
+function send(){
+  let v=text.value;
+  if(!v)return;
+  addMsg(v,"user");
+  text.value="";
+
+  setTimeout(()=>{
+    let r=roles[current].cards;
+    addMsg(r[Math.floor(Math.random()*r.length)],"bot");
+  },800);
+}
+
+// 主动发消息
+setInterval(()=>{
+  let keys=Object.keys(roles);
+  let r=keys[Math.floor(Math.random()*keys.length)];
+  let cards=roles[r].cards;
+  addMsg(cards[Math.floor(Math.random()*cards.length)],"bot",r);
+},8000);
+
+// 添加角色
+function addRole(){
+  let name=prompt("名字");
+  let avatar=prompt("头像链接");
+  if(!name)return;
+
+  roles[name]={
+    avatar:avatar||"",
+    cards:["你好","在吗"],
+    chat:[],
+    unread:0
+  };
+  save();
+  renderRoles();
+}
+
+// 设置背景
+let bg=localStorage.getItem("bg");
+if(bg) document.body.style.backgroundImage="url("+bg+")";
+
+document.body.addEventListener("dblclick",()=>{
+  let b=prompt("输入背景图片链接");
+  if(b){
+    localStorage.setItem("bg",b);
+    location.reload();
+  }
+});
+
+// 初始化
+renderRoles();
+switchRole(Object.keys(roles)[0]);
 </script>
 
 </body>
